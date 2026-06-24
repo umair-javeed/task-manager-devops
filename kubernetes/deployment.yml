@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: task-manager
-        image: umair5/task-manager:latest
+        image: 495599752398.dkr.ecr.us-east-1.amazonaws.com/task-manager:latest
         ports:
         - containerPort: 3000

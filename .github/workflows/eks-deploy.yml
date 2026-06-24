@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,9 +20,8 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        role-to-assume: arn:aws:iam::495599752398:role/GitHubActionsEKSRole
+        aws-region: us-east-1
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -40,12 +43,9 @@ jobs:
         sudo mv kubectl /usr/local/bin/
 
     - name: Update kubeconfig
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
       run: |
-        aws eks update-kubeconfig --name eks-learning --region ${{ secrets.AWS_REGION }}
+        aws eks update-kubeconfig --name eks-learning --region us-east-1
+
     - name: Verify kubectl connection
       run: |
         kubectl get nodes
@@ -55,9 +55,6 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: task-manager
         IMAGE_TAG: ${{ github.sha }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
       run: |
         kubectl set image deployment/task-manager-deployment task-manager=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         kubectl rollout status deployment/task-manager-deployment
